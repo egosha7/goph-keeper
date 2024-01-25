@@ -1,4 +1,4 @@
-module github.com/egosha7/site-go
+module github.com/egosha7/goph-keeper
 
 go 1.20
 

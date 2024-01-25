@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"github.com/egosha7/site-go/internal/config"
+	"github.com/egosha7/goph-keeper/internal/config"
 	"github.com/jackc/pgx/v4"
 	"net/http"
 )

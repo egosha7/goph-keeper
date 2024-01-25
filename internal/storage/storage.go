@@ -6,45 +6,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"go.uber.org/zap"
-	"sync"
 )
-
-// URLStore представляет хранилище сокращенных URL.
-type URLStore struct {
-	urls     []URL
-	mu       sync.RWMutex
-	DBstring string
-	db       *pgx.Conn
-	logger   *zap.Logger
-	pool     *pgxpool.Pool
-}
-
-// URL представляет структуру с данными о сокращенном URL.
-type URL struct {
-	ID     string
-	URL    string
-	UserID string
-}
-
-// NewURLStore создает новый экземпляр URLStore.
-func NewURLStore(DBstring string, db *pgx.Conn, logger *zap.Logger, pool *pgxpool.Pool) *URLStore {
-	return &URLStore{
-		urls:     make([]URL, 0),
-		DBstring: DBstring,
-		db:       db,
-		logger:   logger,
-		pool:     pool,
-	}
-}
-
-// URLRepository представляет интерфейс для работы с базой данных.
-type URLRepository interface {
-	AddURL(id string, url string) (string, bool)
-	GetIDByURL(url string) (string, bool)
-	GetURLByID(id string) (string, bool)
-	CreateTable()
-	PrintAllURLs()
-}
 
 // PostgresURLRepository реализует интерфейс URLRepository для работы с PostgreSQL.
 type PostgresURLRepository struct {
@@ -60,6 +22,43 @@ func NewPostgresURLRepository(db *pgx.Conn, logger *zap.Logger, pool *pgxpool.Po
 		logger: logger,
 		pool:   pool,
 	}
+}
+
+// CreateTable создает необходимые таблицы в базе данных.
+func (r *PostgresURLRepository) InsertNewUser(login string, password []byte) error {
+	// Использование пула подключений для выполнения запросов
+	conn, err := r.pool.Acquire(context.Background())
+	if err != nil {
+		r.logger.Error("Error open connection", zap.Error(err))
+		return err
+	}
+	defer conn.Release()
+
+	// Добавляем данные в таблицу user_urls
+	userQuery := "INSERT INTO users (login, password) VALUES ($1, $2)"
+	_, userErr := conn.Exec(context.Background(), userQuery, login, password)
+	if userErr != nil {
+		r.logger.Error("Failed to add user URL", zap.Error(userErr))
+		conn.Release()
+		return userErr
+	}
+	conn.Release()
+	return nil
+}
+
+// CreateTable создает необходимые таблицы в базе данных.
+func (r *PostgresURLRepository) CheckValidUser(login string) (error, string) {
+	var pass string
+	query := "SELECT password FROM users WHERE login = $1"
+	err := r.db.QueryRow(context.Background(), query, login).Scan(&pass)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return err, ""
+		}
+		r.logger.Error("Failed to get ID by URL", zap.Error(err))
+		return err, ""
+	}
+	return nil, pass
 }
 
 // CreateTable создает необходимые таблицы в базе данных.

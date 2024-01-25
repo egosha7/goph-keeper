@@ -5,6 +5,7 @@ import (
 	"github.com/egosha7/goph-keeper/internal/compress"
 	"github.com/egosha7/goph-keeper/internal/config"
 	"github.com/egosha7/goph-keeper/internal/storage"
+	"github.com/egosha7/goph-keeper/server/handlers"
 	"github.com/go-chi/chi"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -45,6 +46,24 @@ func SetupRoutes(cfg *config.Config, conn *pgx.Conn, logger *zap.Logger) http.Ha
 
 			route.Delete(
 				"/", func(w http.ResponseWriter, r *http.Request) {
+
+				},
+			)
+
+			route.Post(
+				"/auth", func(w http.ResponseWriter, r *http.Request) {
+					handlers.AuthUser(w, r, conn)
+				},
+			)
+
+			route.Post(
+				"/auth/registration", func(w http.ResponseWriter, r *http.Request) {
+					handlers.RegisterUser(w, r, conn, logger, repo)
+				},
+			)
+
+			route.Post(
+				"/auth/checkpin", func(w http.ResponseWriter, r *http.Request) {
 
 				},
 			)
