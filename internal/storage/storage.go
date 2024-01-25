@@ -24,7 +24,7 @@ func NewPostgresURLRepository(db *pgx.Conn, logger *zap.Logger, pool *pgxpool.Po
 	}
 }
 
-// CreateTable создает необходимые таблицы в базе данных.
+// InsertNewUser вставляет информацию о пользователе в таблицу.
 func (r *PostgresURLRepository) InsertNewUser(login string, password []byte) error {
 	// Использование пула подключений для выполнения запросов
 	conn, err := r.pool.Acquire(context.Background())
@@ -46,7 +46,7 @@ func (r *PostgresURLRepository) InsertNewUser(login string, password []byte) err
 	return nil
 }
 
-// CreateTable создает необходимые таблицы в базе данных.
+// CheckValidUser - валидация пользователя.
 func (r *PostgresURLRepository) CheckValidUser(login string) (error, string) {
 	var pass string
 	query := "SELECT password FROM users WHERE login = $1"
@@ -55,10 +55,25 @@ func (r *PostgresURLRepository) CheckValidUser(login string) (error, string) {
 		if err == pgx.ErrNoRows {
 			return err, ""
 		}
-		r.logger.Error("Failed to get ID by URL", zap.Error(err))
+		r.logger.Error("Failed to valid user", zap.Error(err))
 		return err, ""
 	}
 	return nil, pass
+}
+
+// CheckUniqUser проверяет уникальность логина.
+func (r *PostgresURLRepository) CheckUniqUser(login string) (error, string) {
+	var existingUser string
+	query := "SELECT login FROM users WHERE login = $1"
+	err := r.db.QueryRow(context.Background(), query, login).Scan(&existingUser)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return err, ""
+		}
+		r.logger.Error("Failed to check uniq login", zap.Error(err))
+		return err, ""
+	}
+	return nil, existingUser
 }
 
 // CreateTable создает необходимые таблицы в базе данных.

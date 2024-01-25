@@ -25,8 +25,8 @@ func SetupRoutes(cfg *config.Config, conn *pgx.Conn, logger *zap.Logger) http.Ha
 	if err != nil {
 		logger.Error("Error connect config", zap.Error(err))
 	}
-	// Создание хранилища
 
+	// Создание хранилища
 	// store := storage.NewURLStore(cfg.DataBase, conn, logger, pool)
 	repo := storage.NewPostgresURLRepository(conn, logger, pool)
 
@@ -52,13 +52,13 @@ func SetupRoutes(cfg *config.Config, conn *pgx.Conn, logger *zap.Logger) http.Ha
 
 			route.Post(
 				"/auth", func(w http.ResponseWriter, r *http.Request) {
-					handlers.AuthUser(w, r, conn)
+					handlers.AuthUser(w, r, repo)
 				},
 			)
 
 			route.Post(
 				"/auth/registration", func(w http.ResponseWriter, r *http.Request) {
-					handlers.RegisterUser(w, r, conn, logger, repo)
+					handlers.RegisterUser(w, r, logger, repo)
 				},
 			)
 

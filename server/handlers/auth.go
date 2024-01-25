@@ -16,7 +16,7 @@ type User struct {
 	Password string `json:"password"`
 }
 
-func RegisterUser(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, logger *zap.Logger, store *storage.PostgresURLRepository) {
+func RegisterUser(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
 	// Парсинг JSON-данных из запроса
 	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -35,7 +35,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, logger
 
 	// Проверка, что логин уникальный
 	var existingUser string
-	err = conn.QueryRow(r.Context(), "SELECT login FROM users WHERE login = $1", user.Login).Scan(&existingUser)
+	err, existingUser = store.CheckUniqUser(user.Login)
 	if err != nil && err != pgx.ErrNoRows {
 		logger.Error("Ошибка при выполнении запроса к базе данных", zap.Error(err))
 		http.Error(w, "Ошибка при выполнении запроса к базе данных", http.StatusInternalServerError)
@@ -56,14 +56,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, logger
 	}
 
 	// Вставка нового пользователя в таблицу users и получение user_id
-	var userID int
-	err = conn.QueryRow(r.Context(), "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING user_id", user.Login, hashedPassword).Scan(&userID)
-	if err != nil {
-		// Обработка ошибки
-		http.Error(w, "Ошибка при регистрации пользователя", http.StatusInternalServerError)
-		return
-	}
-
 	err = store.InsertNewUser(user.Login, hashedPassword)
 
 	// Ответ клиенту
