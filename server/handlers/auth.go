@@ -57,6 +57,11 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, logger *zap.Logger, st
 
 	// Вставка нового пользователя в таблицу users и получение user_id
 	err = store.InsertNewUser(user.Login, hashedPassword)
+	if err != nil {
+		logger.Error("Ошибка вставки пользователя", zap.Error(err))
+		http.Error(w, "Ошибка вставки пользователя", http.StatusInternalServerError)
+		return
+	}
 
 	// Ответ клиенту
 	w.WriteHeader(http.StatusOK)
@@ -80,7 +85,7 @@ func AuthUser(w http.ResponseWriter, r *http.Request, store *storage.PostgresURL
 	}
 
 	// Получение хэшированного пароля из базы данных по логину
-	var hashedPassword string
+	var hashedPassword []byte
 	err, hashedPassword = store.CheckValidUser(user.Login)
 	if err == pgx.ErrNoRows {
 		http.Error(w, "Неверная пара логин/пароль", http.StatusUnauthorized)

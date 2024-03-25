@@ -47,16 +47,16 @@ func (r *PostgresURLRepository) InsertNewUser(login string, password []byte) err
 }
 
 // CheckValidUser - валидация пользователя.
-func (r *PostgresURLRepository) CheckValidUser(login string) (error, string) {
-	var pass string
+func (r *PostgresURLRepository) CheckValidUser(login string) (error, []byte) {
+	var pass []byte
 	query := "SELECT password FROM users WHERE login = $1"
 	err := r.db.QueryRow(context.Background(), query, login).Scan(&pass)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return err, ""
+			return err, nil
 		}
 		r.logger.Error("Failed to valid user", zap.Error(err))
-		return err, ""
+		return err, nil
 	}
 	return nil, pass
 }
