@@ -63,6 +63,12 @@ func SetupRoutes(cfg *config.Config, conn *pgx.Conn, logger *zap.Logger) http.Ha
 			)
 
 			route.Post(
+				"/pass/namelist", func(w http.ResponseWriter, r *http.Request) {
+					handlers.GetSitesList(w, r, logger, repo)
+				},
+			)
+
+			route.Post(
 				"/auth/checkpin", func(w http.ResponseWriter, r *http.Request) {
 
 				},
