@@ -2,7 +2,8 @@ package db
 
 import (
 	"context"
-	"github.com/egosha7/site-go/internal/config"
+	"fmt"
+	"github.com/egosha7/goph-keeper/internal/config"
 	"github.com/jackc/pgx/v4"
 	"net/http"
 )
@@ -20,6 +21,8 @@ func ConnectToDB(cfg *config.Config) (*pgx.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf(cfg.DataBase)
 
 	conn, err := pgx.ConnectConfig(context.Background(), connConfig)
 	if err != nil {
