@@ -14,6 +14,7 @@ import (
 type User struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
+	Pin      string `json:"pin"`
 }
 
 func RegisterUser(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
@@ -27,7 +28,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, logger *zap.Logger, st
 	}
 
 	// Проверка наличия обязательных полей в запросе
-	if user.Login == "" || user.Password == "" {
+	if user.Login == "" || user.Password == "" || user.Pin == "" {
 		logger.Error("Неверный формат запроса: отсутствуют обязательные поля")
 		http.Error(w, "Неверный формат запроса", http.StatusBadRequest)
 		return
@@ -55,8 +56,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, logger *zap.Logger, st
 		return
 	}
 
-	// Вставка нового пользователя в таблицу users и получение user_id
-	err = store.InsertNewUser(user.Login, hashedPassword)
+	// Вставка нового пользователя в таблицу users
+	err = store.InsertNewUser(user.Login, hashedPassword, user.Pin)
 	if err != nil {
 		logger.Error("Ошибка вставки пользователя", zap.Error(err))
 		http.Error(w, "Ошибка вставки пользователя", http.StatusInternalServerError)

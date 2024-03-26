@@ -64,13 +64,43 @@ func SetupRoutes(cfg *config.Config, conn *pgx.Conn, logger *zap.Logger) http.Ha
 
 			route.Post(
 				"/pass/namelist", func(w http.ResponseWriter, r *http.Request) {
-					handlers.GetSitesList(w, r, logger, repo)
+					handlers.GetPasswordNameList(w, r, logger, repo)
 				},
 			)
 
 			route.Post(
-				"/auth/checkpin", func(w http.ResponseWriter, r *http.Request) {
+				"/card/namelist", func(w http.ResponseWriter, r *http.Request) {
+					handlers.GetCardList(w, r, logger, repo)
+				},
+			)
 
+			route.Post(
+				"/pincheck", func(w http.ResponseWriter, r *http.Request) {
+					handlers.CheckPinCodeHandler(w, r, logger, repo)
+				},
+			)
+
+			route.Post(
+				"/password/get", func(w http.ResponseWriter, r *http.Request) {
+					handlers.GetPasswordHandler(w, r, logger, repo)
+				},
+			)
+
+			route.Post(
+				"/password/add", func(w http.ResponseWriter, r *http.Request) {
+					handlers.NewPassword(w, r, logger, repo)
+				},
+			)
+
+			route.Post(
+				"/card/get", func(w http.ResponseWriter, r *http.Request) {
+					handlers.GetCardHandler(w, r, logger, repo)
+				},
+			)
+
+			route.Post(
+				"/card/add", func(w http.ResponseWriter, r *http.Request) {
+					handlers.NewCard(w, r, logger, repo)
 				},
 			)
 
