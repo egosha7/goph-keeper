@@ -8,33 +8,35 @@ import (
 	"net/http"
 )
 
-// User структура для представления пользователя
+// UserInfo представляет информацию о пользователе.
 type UserInfo struct {
-	Login string `json:"Login"`
+	Login string `json:"Login"` // Логин пользователя
 }
 
-// CheckPinData структура для передачи данных при проверке пин-кода.
+// CheckPinData представляет данные для проверки пин-кода.
 type CheckPinData struct {
-	Login string `json:"login"`
-	Pin   string `json:"pin"`
+	Login string `json:"login"` // Логин пользователя
+	Pin   string `json:"pin"`   // Пин-код
 }
 
-// CheckPinResponse структура для ответа о результате проверки пин-кода.
+// CheckPinResponse представляет ответ о результате проверки пин-кода.
 type CheckPinResponse struct {
-	Valid bool `json:"valid"`
+	Valid bool `json:"valid"` // Результат проверки пин-кода
 }
 
+// PassData содержит информацию о пароле.
 type PassData struct {
-	Login    string `json:"login"`
-	PassName string `json:"passName"`
+	Login    string `json:"login"`    // Логин пользователя
+	PassName string `json:"passName"` // Название пароля
 }
 
+// CardData содержит информацию о карте.
 type CardData struct {
-	Login    string `json:"login"`
-	CardName string `json:"cardName"`
+	Login    string `json:"login"`    // Логин пользователя
+	CardName string `json:"cardName"` // Название карты
 }
 
-// PassData содержит информацию о новом пароле.
+// PasswordData содержит информацию о новом пароле.
 type PasswordData struct {
 	Login    string `json:"login"`    // Логин пользователя
 	PassName string `json:"passName"` // Название нового пароля
@@ -50,6 +52,14 @@ type NewCardData struct {
 	CvvCard        string `json:"CvvCard"`        // Секретный код новой карты
 }
 
+// CardInfo содержит информацию о банковской карте.
+type CardInfo struct {
+	Number     string `json:"number"`     // Номер карты
+	ExpiryDate string `json:"expiryDate"` // Срок действия карты
+	CVV        string `json:"cvv"`        // CVV карты
+}
+
+// NewPassword добавляет новый пароль в хранилище.
 func NewPassword(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
 	// Парсинг JSON-данных из запроса
 	var passwordData PasswordData
@@ -60,7 +70,7 @@ func NewPassword(w http.ResponseWriter, r *http.Request, logger *zap.Logger, sto
 		return
 	}
 
-	// Вставка нового пользователя в таблицу users и получение user_id
+	// Вставка нового пароля в хранилище
 	err = store.InsertNewPassword(passwordData.Login, passwordData.PassName, passwordData.Password)
 	if err != nil {
 		logger.Error("Ошибка вставки нового пароля", zap.Error(err))
@@ -74,6 +84,7 @@ func NewPassword(w http.ResponseWriter, r *http.Request, logger *zap.Logger, sto
 	fmt.Fprintf(w, "Пароль %s успешно сохранен", passwordData.PassName)
 }
 
+// NewCard добавляет новую карту в хранилище.
 func NewCard(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
 	// Парсинг JSON-данных из запроса
 	var newCardData NewCardData
@@ -84,7 +95,7 @@ func NewCard(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *
 		return
 	}
 
-	// Вставка нового пользователя в таблицу users и получение user_id
+	// Вставка новой карты в хранилище
 	err = store.InsertNewCard(newCardData.Login, newCardData.CardName, newCardData.NumberCard, newCardData.ExpiryDateCard, newCardData.CvvCard)
 	if err != nil {
 		logger.Error("Ошибка вставки новой карты", zap.Error(err))
@@ -98,6 +109,7 @@ func NewCard(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *
 	fmt.Fprintf(w, "Карта %s успешно сохранена", newCardData.CardName)
 }
 
+// GetPasswordNameList возвращает список названий паролей для указанного пользователя.
 func GetPasswordNameList(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
 	// Получаем логин пользователя из запроса
 	var userInfo UserInfo
@@ -108,15 +120,15 @@ func GetPasswordNameList(w http.ResponseWriter, r *http.Request, logger *zap.Log
 		return
 	}
 
-	// Получаем список сайтов из базы данных для данного пользователя
+	// Получаем список названий паролей из базы данных для данного пользователя
 	passwords, err := store.GetPasswordNameList(userInfo.Login)
 	if err != nil {
-		logger.Error("Ошибка при получении списка сайтов", zap.Error(err))
-		http.Error(w, "Ошибка при получении списка сайтов", http.StatusInternalServerError)
+		logger.Error("Ошибка при получении списка названий паролей", zap.Error(err))
+		http.Error(w, "Ошибка при получении списка названий паролей", http.StatusInternalServerError)
 		return
 	}
 
-	// Отправляем список сайтов клиенту в формате JSON
+	// Отправляем список названий паролей клиенту в формате JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(passwords); err != nil {
@@ -126,6 +138,7 @@ func GetPasswordNameList(w http.ResponseWriter, r *http.Request, logger *zap.Log
 	}
 }
 
+// GetCardList возвращает список названий карт для указанного пользователя.
 func GetCardList(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
 	// Получаем логин пользователя из запроса
 	var userInfo UserInfo
@@ -136,15 +149,15 @@ func GetCardList(w http.ResponseWriter, r *http.Request, logger *zap.Logger, sto
 		return
 	}
 
-	// Получаем список сайтов из базы данных для данного пользователя
+	// Получаем список названий карт из базы данных для данного пользователя
 	cards, err := store.GetCardList(userInfo.Login)
 	if err != nil {
-		logger.Error("Ошибка при получении списка сайтов", zap.Error(err))
-		http.Error(w, "Ошибка при получении списка сайтов", http.StatusInternalServerError)
+		logger.Error("Ошибка при получении списка названий карт", zap.Error(err))
+		http.Error(w, "Ошибка при получении списка названий карт", http.StatusInternalServerError)
 		return
 	}
 
-	// Отправляем список сайтов клиенту в формате JSON
+	// Отправляем список названий карт клиенту в формате JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(cards); err != nil {
@@ -180,6 +193,7 @@ func CheckPinCodeHandler(w http.ResponseWriter, r *http.Request, logger *zap.Log
 	http.Error(w, "Неверный пин-код", http.StatusUnauthorized)
 }
 
+// GetPasswordHandler возвращает пароль с указанным названием для указанного пользователя.
 func GetPasswordHandler(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
 	// Парсим JSON-данные из запроса
 	var passData PassData
@@ -199,17 +213,12 @@ func GetPasswordHandler(w http.ResponseWriter, r *http.Request, logger *zap.Logg
 	}
 
 	// Отправляем пароль клиенту
+	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, password)
 }
 
-// CardInfo содержит информацию о банковской карте.
-type CardInfo struct {
-	Number     string `json:"number"`     // Номер карты
-	ExpiryDate string `json:"expiryDate"` // Срок действия карты
-	CVV        string `json:"cvv"`        // CVV карты
-}
-
+// GetCardHandler возвращает данные карты с указанным названием для указанного пользователя.
 func GetCardHandler(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
 	// Парсим JSON-данные из запроса
 	var cardData CardData

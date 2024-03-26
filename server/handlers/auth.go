@@ -17,6 +17,7 @@ type User struct {
 	Pin      string `json:"pin"`
 }
 
+// RegisterUser обрабатывает запрос на регистрацию нового пользователя.
 func RegisterUser(w http.ResponseWriter, r *http.Request, logger *zap.Logger, store *storage.PostgresURLRepository) {
 	// Парсинг JSON-данных из запроса
 	var user User
@@ -70,6 +71,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, logger *zap.Logger, st
 	fmt.Fprintf(w, "Пользователь %s успешно аутентифицирован", user.Login)
 }
 
+// AuthUser обрабатывает запрос аутентификации пользователя.
 func AuthUser(w http.ResponseWriter, r *http.Request, store *storage.PostgresURLRepository) {
 	// Парсинг JSON-данных из запроса
 	var user User

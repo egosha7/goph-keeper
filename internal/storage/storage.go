@@ -25,7 +25,7 @@ func NewPostgresURLRepository(db *pgx.Conn, logger *zap.Logger, pool *pgxpool.Po
 	}
 }
 
-// InsertNewPassword вставляет информацию о пользователе в таблицу.
+// InsertNewCard вставляет информацию о карте в таблицу.
 func (r *PostgresURLRepository) InsertNewCard(login, cardName, numberCard, expiryDateCard, cvvCard string) error {
 	// Использование пула подключений для выполнения запросов
 	conn, err := r.pool.Acquire(context.Background())
@@ -47,7 +47,7 @@ func (r *PostgresURLRepository) InsertNewCard(login, cardName, numberCard, expir
 	return nil
 }
 
-// InsertNewPassword вставляет информацию о пользователе в таблицу.
+// InsertNewPassword вставляет информацию о пароле в таблицу.
 func (r *PostgresURLRepository) InsertNewPassword(login, passName, password string) error {
 	// Использование пула подключений для выполнения запросов
 	conn, err := r.pool.Acquire(context.Background())

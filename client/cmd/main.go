@@ -225,12 +225,9 @@ func addNewCard(login string) {
 	}
 }
 
-// AddNewCard отправляет новую карту на сервер для добавления.
-// Параметры login, cardName, numberCard, expiryDateCard и CvvCard представляют информацию о новой карте.
-// Возвращает true в случае успешного добавления и ошибку в случае неудачи.
 func AddNewCard(login, cardName, numberCard, expiryDateCard, CvvCard string) (bool, error) {
-	// Создаем JSON-объект с информацией о новой карте
-	cardData := NewCardData{
+	// Создаем JSON-объект с информацией о пользователе и новом пароле
+	passwordData := NewCardData{
 		Login:          login,
 		CardName:       cardName,
 		NumberCard:     numberCard,
@@ -239,12 +236,12 @@ func AddNewCard(login, cardName, numberCard, expiryDateCard, CvvCard string) (bo
 	}
 
 	// Преобразуем информацию в JSON
-	jsonData, err := json.Marshal(cardData)
+	jsonData, err := json.Marshal(passwordData)
 	if err != nil {
 		return false, fmt.Errorf("ошибка при кодировании JSON: %v", err)
 	}
 
-	// Отправляем POST-запрос на сервер для добавления новой карты
+	// Отправляем POST-запрос на сервер для добавления нового пароля
 	resp, err := http.Post("http://localhost:8080/card/add", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return false, fmt.Errorf("ошибка при выполнении запроса: %v", err)
@@ -259,8 +256,6 @@ func AddNewCard(login, cardName, numberCard, expiryDateCard, CvvCard string) (bo
 	return true, nil
 }
 
-// addNewPassword запрашивает информацию о новом пароле у пользователя и отправляет его на сервер для добавления.
-// Параметр login представляет логин пользователя.
 func addNewPassword(login string) {
 	// Получаем информацию о новом пароле от пользователя
 	reader := bufio.NewReader(os.Stdin)
@@ -280,7 +275,7 @@ func addNewPassword(login string) {
 	}
 
 	// Отправляем новый пароль на сервер
-	success, err := AddNewPassword(login, passName, password)
+	success, err := AddPassword(login, passName, password)
 	if err != nil {
 		fmt.Println("Ошибка при добавлении нового пароля:", err)
 		return
@@ -293,7 +288,12 @@ func addNewPassword(login string) {
 	}
 }
 
-func AddNewPassword(login, name, password string) (bool, error) {
+// AddPassword отправляет запрос на сервер для добавления нового пароля.
+// Параметр login представляет логин пользователя.
+// Параметр name представляет название нового пароля.
+// Параметр password представляет сам пароль.
+// Функция возвращает true, если операция добавления прошла успешно, иначе возвращает ошибку.
+func AddPassword(login, name, password string) (bool, error) {
 	// Создаем JSON-объект с информацией о пользователе и новом пароле
 	passwordData := PasswordData{
 		Login:    login,
@@ -322,6 +322,8 @@ func AddNewPassword(login, name, password string) (bool, error) {
 	return true, nil
 }
 
+// viewCardsName отправляет запрос на сервер для получения списка названий карт пользователя и выводит их на экран.
+// Параметр login представляет логин пользователя.
 func viewCardsName(login string) {
 	// Создаем JSON-объект с информацией о пользователе
 	userInfo := UserInfo{
@@ -366,7 +368,7 @@ func viewCardsName(login string) {
 		fmt.Println("0. Вернуться назад")
 
 		// Получаем выбор пользователя
-		fmt.Print("Выберите номер пароля: ")
+		fmt.Print("Выберите номер карты: ")
 		var choice int
 		_, err := fmt.Scanln(&choice)
 		if err != nil {
@@ -379,7 +381,7 @@ func viewCardsName(login string) {
 			fmt.Println("Возвращаемся назад...")
 			return
 		} else if choice < 1 || choice > len(namecards) {
-			fmt.Println("Некорректный номер пароля")
+			fmt.Println("Некорректный номер карты")
 			continue
 		}
 
@@ -399,12 +401,12 @@ func viewCardsName(login string) {
 			continue
 		}
 
-		// Если пин-код валиден, выводим пароль
+		// Если пин-код валиден, выводим данные о карте
 		if valid {
-			// Выводим выбранную
+			// Выводим выбранную карту
 			selectedNameCard := namecards[choice-1]
 			cardNumber, cardExpiry, cardCVV, _ := GetCard(login, selectedNameCard)
-			fmt.Println("Данные от карты: %s\n", selectedNameCard)
+			fmt.Printf("Данные от карты '%s':\n", selectedNameCard)
 			fmt.Printf("Номер карты: %s\n", cardNumber)
 			fmt.Printf("Срок действия: %s\n", cardExpiry)
 			fmt.Printf("CVV: %s\n", cardCVV)
@@ -415,6 +417,10 @@ func viewCardsName(login string) {
 	}
 }
 
+// GetCard отправляет запрос на сервер для получения данных о карте пользователя.
+// Параметр login представляет логин пользователя.
+// Параметр selectedNameCard представляет название выбранной карты.
+// Возвращает номер карты, срок действия и CVV карты, а также ошибку, если таковая возникла.
 func GetCard(login, selectedNameCard string) (string, string, string, error) {
 	// Создаем JSON-объект с информацией о пользователе и названии карты
 	cardData := CardData{
@@ -437,7 +443,7 @@ func GetCard(login, selectedNameCard string) (string, string, string, error) {
 
 	// Проверяем статус ответа
 	if resp.StatusCode != http.StatusOK {
-		return "", "", "", fmt.Errorf("Ошибка: сервер вернул статус %s", resp.Status)
+		return "", "", "", fmt.Errorf("ошибка: сервер вернул статус %s", resp.Status)
 	}
 
 	// Декодируем ответ в структуру CardInfo
@@ -450,6 +456,8 @@ func GetCard(login, selectedNameCard string) (string, string, string, error) {
 	return cardInfo.Number, cardInfo.ExpiryDate, cardInfo.CVV, nil
 }
 
+// viewPasswordsName отправляет запрос на сервер для получения списка названий паролей пользователя и их отображения.
+// Параметр login представляет логин пользователя.
 func viewPasswordsName(login string) {
 	// Создаем JSON-объект с информацией о пользователе
 	userInfo := UserInfo{
@@ -541,6 +549,10 @@ func viewPasswordsName(login string) {
 	}
 }
 
+// GetPassword отправляет запрос на сервер для получения пароля пользователя по выбранному названию.
+// Параметр login представляет логин пользователя.
+// Параметр selectedNamePassword представляет название выбранного пароля.
+// Возвращает пароль и ошибку, если таковая возникла.
 func GetPassword(login, selectedNamePassword string) (string, error) {
 	// Создаем JSON-объект с информацией о пользователе и пин-коде
 	passData := PassData{
@@ -563,7 +575,7 @@ func GetPassword(login, selectedNamePassword string) (string, error) {
 
 	// Проверяем статус ответа
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Oшибка: сервер вернул статус %s", resp.Status)
+		return "", fmt.Errorf("ошибка: сервер вернул статус %s", resp.Status)
 	}
 
 	// Читаем ответ и возвращаем полученный пароль
@@ -575,6 +587,10 @@ func GetPassword(login, selectedNamePassword string) (string, error) {
 	return string(body), nil
 }
 
+// checkPinCode отправляет запрос на сервер для проверки пин-кода пользователя.
+// Параметр login представляет логин пользователя.
+// Параметр pinCode представляет введенный пин-код.
+// Возвращает true, если пин-код верен, и ошибку, если таковая возникла.
 func checkPinCode(login, pinCode string) (bool, error) {
 	// Создаем JSON-объект с информацией о пользователе и пин-коде
 	pinData := PinData{
@@ -606,7 +622,7 @@ func checkPinCode(login, pinCode string) (bool, error) {
 	return true, nil
 }
 
-// Функция для регистрации пользователя
+// registerUser регистрирует нового пользователя.
 func registerUser() {
 	fmt.Println("Введите ваш email:")
 	email := getUserInput()
@@ -668,7 +684,6 @@ func registerUser() {
 		fmt.Println("Ошибка при регистрации пользователя:", resp.Status)
 		registerUser()
 	}
-
 }
 
 // Функция для аутентификации пользователя
