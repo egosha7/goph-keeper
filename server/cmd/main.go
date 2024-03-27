@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/egosha7/goph-keeper/internal/config"
-	"github.com/egosha7/goph-keeper/internal/db"
-	loger "github.com/egosha7/goph-keeper/internal/logger"
+	"github.com/egosha7/goph-keeper/server/config"
+	"github.com/egosha7/goph-keeper/server/db"
+	loger "github.com/egosha7/goph-keeper/server/logger"
 	routes "github.com/egosha7/goph-keeper/server/router"
 	"go.uber.org/zap"
 	"net/http"

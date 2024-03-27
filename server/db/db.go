@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
-	"github.com/egosha7/goph-keeper/internal/config"
+	"github.com/egosha7/goph-keeper/server/config"
 	"github.com/jackc/pgx/v4"
 	"net/http"
 )
