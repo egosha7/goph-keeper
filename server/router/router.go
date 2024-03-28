@@ -34,8 +34,8 @@ func SetupRoutes(cfg *config.Config, conn *pgx.Conn, logger *zap.Logger) http.Ha
 
 	// Создание хранилища
 	repo := repository.NewPostgreSQLRepository(pool, logger)
-	sevice := service.NewUserService(repo, logger)
-	h := handlers.NewHandler(sevice, logger)
+	services := service.NewUserService(repo, logger)
+	h := handlers.NewHandler(services, logger)
 
 	// Создание роутера
 	r := chi.NewRouter()
@@ -70,11 +70,11 @@ func SetupRoutes(cfg *config.Config, conn *pgx.Conn, logger *zap.Logger) http.Ha
 					h.GetCardList(w, r)
 				},
 			)
-			//	route.Post(
-			//		"/pincheck", func(w http.ResponseWriter, r *http.Request) {
-			//			h.CheckPinCodeHandler(w, r, logger, repo)
-			//		},
-			//	)
+			route.Post(
+				"/pincheck", func(w http.ResponseWriter, r *http.Request) {
+					h.CheckPinCodeHandler(w, r)
+				},
+			)
 			route.Post(
 				"/password/get", func(w http.ResponseWriter, r *http.Request) {
 					h.GetPasswordHandler(w, r)

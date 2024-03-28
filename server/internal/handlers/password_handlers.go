@@ -16,7 +16,7 @@ func (h *Handler) AddPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.userService.AddPassword(requestData.Login, requestData.PassName, requestData.Password)
+	err := h.Services.AddPassword(requestData.Login, requestData.PassName, requestData.Password)
 	if err != nil {
 		h.logger.Error("Ошибка при добавлении нового пароля", zap.Error(err))
 		http.Error(w, "Ошибка при добавлении нового пароля", http.StatusInternalServerError)
@@ -35,7 +35,7 @@ func (h *Handler) GetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	password, err := h.userService.GetPassword(requestData.Login, requestData.PassName)
+	password, err := h.Services.GetPassword(requestData.Login, requestData.PassName)
 	if err != nil {
 		h.logger.Error("Ошибка при получении пароля", zap.Error(err))
 		http.Error(w, "Ошибка при получении пароля", http.StatusInternalServerError)
@@ -56,7 +56,7 @@ func (h *Handler) GetPasswordNameList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	passwords, err := h.userService.GetPasswordNameList(userInfo.Login)
+	passwords, err := h.Services.GetPasswordNameList(userInfo.Login)
 	if err != nil {
 		h.logger.Error("Ошибка при получении списка названий паролей", zap.Error(err))
 		http.Error(w, "Ошибка при получении списка названий паролей", http.StatusInternalServerError)

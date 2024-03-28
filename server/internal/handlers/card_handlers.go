@@ -16,7 +16,7 @@ func (h *Handler) AddCardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.userService.AddCard(
+	err := h.Services.AddCard(
 		requestData.Login, requestData.CardName, requestData.NumberCard, requestData.ExpiryDateCard,
 		requestData.CvvCard,
 	)
@@ -38,7 +38,7 @@ func (h *Handler) GetCardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cardNumber, cardExpiryDate, cardCVV, err := h.userService.GetCard(requestData.Login, requestData.CardName)
+	cardNumber, cardExpiryDate, cardCVV, err := h.Services.GetCard(requestData.Login, requestData.CardName)
 	if err != nil {
 		h.logger.Error("Ошибка при получении информации о карте", zap.Error(err))
 		http.Error(w, "Ошибка при получении информации о карте", http.StatusInternalServerError)
@@ -78,7 +78,7 @@ func (h *Handler) GetCardList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cards, err := h.userService.GetCardNameList(userInfo.Login)
+	cards, err := h.Services.GetCardNameList(userInfo.Login)
 	if err != nil {
 		h.logger.Error("Ошибка при получении списка названий карт", zap.Error(err))
 		http.Error(w, "Ошибка при получении списка названий карт", http.StatusInternalServerError)

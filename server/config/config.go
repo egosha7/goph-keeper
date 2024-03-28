@@ -21,7 +21,7 @@ func Default() *Config {
 	return &Config{
 		Addr:     "localhost:8080",
 		BaseURL:  "http://localhost:8080",
-		DataBase: "postgres://egosha:admin@localhost:5432/keeper",
+		DataBase: "postgres://postgres:egosha@localhost:5432/keeper", // postgres://egosha:admin@localhost:5432/keeper
 	}
 }
 

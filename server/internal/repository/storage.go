@@ -12,24 +12,21 @@ import (
 
 // UserRepository представляет интерфейс для работы с данными пользователей.
 type UserRepository interface {
-	InsertNewUser(login string, password []byte, pin string) error
-	CheckValidUser(login string) (bool, []byte, error)
+	Create(user *domain.User) error
+	GetByUsername(username string) (*domain.User, error)
 	CheckUniqUser(login string) (bool, error)
 	CheckPinCode(login, pin string) (bool, error)
-}
-
-// CardRepository представляет интерфейс для работы с данными карт.
-type CardRepository interface {
+	CheckValidUser(login string) (string, error)
 	InsertNewCard(login, cardName, numberCard, expiryDateCard, cvvCard string) error
 	GetCard(login, cardName string) (string, string, string, error)
-	GetCardList(login string) ([]string, error)
-}
-
-// PasswordRepository представляет интерфейс для работы с данными паролей.
-type PasswordRepository interface {
+	GetCardNameList(login string) ([]string, error)
 	InsertNewPassword(login, passName, password string) error
 	GetPassword(login, passName string) (string, error)
 	GetPasswordNameList(login string) ([]string, error)
+}
+
+type Repository struct {
+	UserRepository
 }
 
 // PostgreSQLRepository представляет репозиторий для работы с PostgreSQL.
@@ -39,37 +36,28 @@ type PostgreSQLRepository struct {
 }
 
 // NewPostgreSQLRepository создает новый экземпляр PostgreSQLRepository.
-func NewPostgreSQLRepository(pool *pgxpool.Pool, logger *zap.Logger) *PostgreSQLRepository {
-	return &PostgreSQLRepository{
-		pool:   pool,
-		logger: logger,
+func NewPostgreSQLRepository(pool *pgxpool.Pool, logger *zap.Logger) *Repository {
+	return &Repository{
+		UserRepository: &PostgreSQLRepository{
+			pool:   pool,
+			logger: logger,
+		},
 	}
-}
-
-// InsertNewUser вставляет нового пользователя в базу данных.
-func (r *PostgreSQLRepository) InsertNewUser(login string, password []byte, pin string) error {
-	query := "INSERT INTO users (login, password, pin) VALUES ($1, $2, $3)"
-	_, err := r.pool.Exec(context.Background(), query, login, password, pin)
-	if err != nil {
-		r.logger.Error("Failed to insert new user", zap.Error(err))
-		return err
-	}
-	return nil
 }
 
 // CheckValidUser проверяет валидность пользователя.
-func (r *PostgreSQLRepository) CheckValidUser(login string) (bool, []byte, error) {
-	var password []byte
+func (r *PostgreSQLRepository) CheckValidUser(login string) (string, error) {
+	var password string
 	query := "SELECT password FROM users WHERE login = $1"
 	err := r.pool.QueryRow(context.Background(), query, login).Scan(&password)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return false, nil, nil
+			return "", nil
 		}
 		r.logger.Error("Failed to check user validity", zap.Error(err))
-		return false, nil, err
+		return "", err
 	}
-	return true, password, nil
+	return password, nil
 }
 
 // CheckUniqUser проверяет уникальность логина пользователя.
@@ -206,14 +194,15 @@ func (r *PostgreSQLRepository) CheckPinCode(login, pin string) (bool, error) {
 // Create создает нового пользователя в базе данных.
 func (r *PostgreSQLRepository) Create(user *domain.User) error {
 	_, err := r.pool.Exec(
-		context.Background(), "INSERT INTO users (username, password) VALUES ($1, $2)", user.Login, user.Password,
+		context.Background(), "INSERT INTO users (login, password, pin) VALUES ($1, $2, $3)", user.Login, user.Password,
+		user.Pin,
 	)
 	return err
 }
 
 // GetByUsername возвращает пользователя из базы данных по его логину.
 func (r *PostgreSQLRepository) GetByUsername(username string) (*domain.User, error) {
-	row := r.pool.QueryRow(context.Background(), "SELECT username, password FROM users WHERE username = $1", username)
+	row := r.pool.QueryRow(context.Background(), "SELECT password FROM users WHERE username = $1", username)
 	user := &domain.User{}
 	err := row.Scan(&user.Login, &user.Password)
 	if err != nil {

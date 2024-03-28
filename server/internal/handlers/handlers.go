@@ -7,14 +7,14 @@ import (
 
 // Handler представляет обработчик HTTP-запросов.
 type Handler struct {
-	userService *service.UserService
-	logger      *zap.Logger
+	Services *service.Service
+	logger   *zap.Logger
 }
 
 // NewHandler создает новый экземпляр Handler.
-func NewHandler(userService *service.UserService, logger *zap.Logger) *Handler {
+func NewHandler(services *service.Service, logger *zap.Logger) *Handler {
 	return &Handler{
-		userService: userService,
-		logger:      logger,
+		Services: services,
+		logger:   logger,
 	}
 }
