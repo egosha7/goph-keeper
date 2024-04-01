@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/egosha7/goph-keeper/internal/style"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net/http"
@@ -72,7 +73,7 @@ type NewCardData struct {
 // Функция с которой начинается работа программы
 func main() {
 	// Вывод информации о версии и дате сборки
-	fmt.Println(string(colorGreen), name, string(colorReset))
+	fmt.Println(string(style.ColorGreen), style.Name, string(style.ColorReset))
 	showStartMenu()
 
 	// Создание канала для сигналов
